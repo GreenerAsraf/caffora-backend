@@ -25,8 +25,8 @@ router.get('/', async (req, res) => {
                 { description: { contains: q, mode: 'insensitive' } },
             ];
         }
-        if (category) {
-            where.category = { slug: category };
+        if (category && category !== 'all') {
+            where.categoryId = category;
         }
         if (minPrice || maxPrice) {
             where.price = {};
@@ -100,8 +100,9 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        const product = await prisma_1.default.product.findUnique({
-            where: { id },
+        const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+        const product = await prisma_1.default.product.findFirst({
+            where: isUuid ? { id } : { slug: id },
             include: {
                 category: { select: { id: true, name: true, slug: true } },
                 reviews: {

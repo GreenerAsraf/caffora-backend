@@ -96,6 +96,52 @@ router.get('/wishlist', async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to fetch wishlist' });
     }
 });
+// POST /api/dashboard/wishlist/toggle - toggle a product in the wishlist
+router.post('/wishlist/toggle', async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { productId } = req.body;
+        if (!productId) {
+            res.status(400).json({ success: false, message: 'Product ID is required' });
+            return;
+        }
+        // Ensure wishlist exists for user
+        let wishlist = await prisma_1.default.wishlist.findUnique({
+            where: { userId },
+            include: { products: { select: { id: true } } },
+        });
+        if (!wishlist) {
+            wishlist = await prisma_1.default.wishlist.create({
+                data: { userId },
+                include: { products: { select: { id: true } } },
+            });
+        }
+        const hasProduct = wishlist.products.some((p) => p.id === productId);
+        if (hasProduct) {
+            // Remove
+            await prisma_1.default.wishlist.update({
+                where: { id: wishlist.id },
+                data: {
+                    products: { disconnect: { id: productId } },
+                },
+            });
+            res.json({ success: true, message: 'Removed from wishlist', data: { added: false } });
+        }
+        else {
+            // Add
+            await prisma_1.default.wishlist.update({
+                where: { id: wishlist.id },
+                data: {
+                    products: { connect: { id: productId } },
+                },
+            });
+            res.json({ success: true, message: 'Added to wishlist', data: { added: true } });
+        }
+    }
+    catch (error) {
+        res.status(500).json({ success: false, message: 'Failed to toggle wishlist' });
+    }
+});
 // GET /api/dashboard/admin - admin dashboard overview
 router.get('/admin', (0, role_1.requireRole)('ADMIN'), async (req, res) => {
     try {

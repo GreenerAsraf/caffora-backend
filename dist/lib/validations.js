@@ -20,7 +20,7 @@ exports.createProductSchema = zod_1.z.object({
     comparePrice: zod_1.z.number().positive().optional().nullable(),
     images: zod_1.z.array(zod_1.z.string().url()).min(1, 'At least one image is required'),
     stock: zod_1.z.number().int().min(0).default(0),
-    categoryId: zod_1.z.string().uuid('Invalid category ID'),
+    categoryId: zod_1.z.string().uuid('Invalid category ID').optional().nullable(),
 });
 exports.updateProductSchema = exports.createProductSchema.partial();
 // Category schemas

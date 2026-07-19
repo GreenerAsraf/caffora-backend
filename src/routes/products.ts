@@ -114,8 +114,9 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
-    const product = await prisma.product.findUnique({
-      where: { id },
+    const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+    const product = await prisma.product.findFirst({
+      where: isUuid ? { id } : { slug: id },
       include: {
         category: { select: { id: true, name: true, slug: true } },
         reviews: {
